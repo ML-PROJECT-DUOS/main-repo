@@ -1,8 +1,13 @@
+import tkinter as tk
 from playsound import playsound as PS
 import speech_recognition as s_r
 from googletrans import Translator as Trans
 from gtts import gTTS as googleTranslatorService
 import os
+import pygame
+
+user_directory = f'C:\\Users\\vignesh_viswaa\\PycharmProjects\\speechToSpeech'
+
 
 lang_set = ['afrikaans', 'af', 'albanian', 'sq',
             'amharic', 'am', 'arabic', 'ar',
@@ -53,7 +58,8 @@ lang_set = ['afrikaans', 'af', 'albanian', 'sq',
             'yo', 'zulu', 'zu']
 
 
-def takeInput(inp="ta"):
+
+def takeInput(inp):
     r1 = s_r.Recognizer()
     with s_r.Microphone() as source:
         print("listening to the voice...")
@@ -66,7 +72,7 @@ def takeInput(inp="ta"):
         print(f"user said? {task}\n")
     except Exception as ep:
         print("The user is requested to please say that again...")
-        return "None"
+        return "Please click on the translate and speak button agian"
     return task
 
 
@@ -75,24 +81,89 @@ def destination_language():
     : Ex. English, Hindi, German, French etc.")
     return lang_to_be_converted
 
+def translate_and_speak():
+    input_language = input_lang_entry.get()
+    if input_language in lang_set:
+        input_language = lang_set[lang_set.index(input_language) + 1]
+    destination_language = dest_lang_entry.get()
+    if destination_language in lang_set:
+        destination_language = lang_set[lang_set.index(destination_language) + 1]
+    text_to_translate = takeInput(input_language)
 
-inpLang = input("Enter language to speak in : ").strip().lower()
-task = takeInput(inpLang)
-while task == "None":
-    task = takeInput()
-lang_to_be_converted = destination_language()
-while lang_to_be_converted not in lang_set:
-    print("The language is not available , pls request some other language")
-    print()
-    lang_to_be_converted = destination_language()
-lang_to_be_converted = lang_set[lang_set.index(lang_to_be_converted) + 1]
-translator1 = Trans()
-text_to_translate_1 = translator1.translate(task, dest=lang_to_be_converted)
-text_converted = text_to_translate_1.text
-speak = googleTranslatorService(text=text_converted, lang=lang_to_be_converted, slow=False)
-speak.save("captured_voice.mp3")
-PS('captured_voice.mp3')
-os.remove('captured_voice.mp3')
-print(text_converted)
-sound = googleTranslatorService(text_converted, lang=lang_to_be_converted)
-sound.save("first.mp3")
+    # Translate the text
+    translator = Trans()
+    translated_text = translator.translate(text_to_translate, dest=destination_language).text
+
+    input_text.delete(1.0,tk.END)
+    input_text.insert(tk.END,text_to_translate)
+
+    # Display the translated text in the GUI
+    output_text.delete(1.0, tk.END)
+    output_text.insert(tk.END, translated_text)
+
+    # Save the translated text to an audio file
+    audio_path = os.path.join(user_directory, "captured_voice.mp3")
+    sound_path = os.path.join(user_directory, 'first.mp3')
+    speak = googleTranslatorService(text=translated_text, lang=destination_language, slow=False)
+
+    speak.save(audio_path)
+    os.remove(audio_path)  # Remove the temporary audio file
+
+    sound = googleTranslatorService(translated_text, lang=destination_language)
+    sound.save(sound_path)
+
+    # Load and play the audio using pygame
+    pygame.mixer.init()
+    pygame.mixer.music.load(sound_path)
+    pygame.mixer.music.play()
+    while pygame.mixer.music.get_busy():
+        pygame.time.Clock().tick(10)
+
+    # Close the pygame file
+    pygame.mixer.quit()
+
+    # Remove the first.mp3 file
+    os.remove(sound_path)
+
+
+
+# Rest of your code remains the same
+
+
+# Create the main GUI window
+root = tk.Tk()
+root.title("Language Translator and Speech Synthesis")
+
+# Input Language Label and Entry
+input_lang_label = tk.Label(root, text="Input Language:")
+input_lang_label.pack()
+
+input_lang_entry = tk.Entry(root)
+input_lang_entry.pack()
+
+# Destination Language Label and Entry
+dest_lang_label = tk.Label(root, text="Destination Language:")
+dest_lang_label.pack()
+
+dest_lang_entry = tk.Entry(root)
+dest_lang_entry.pack()
+
+# Translate Button
+translate_button = tk.Button(root, text="Translate and Speak", command=translate_and_speak)
+translate_button.pack()
+
+# Input Text Label and Text Area
+input_text_label = tk.Label(root, text="Input Text:")
+input_text_label.pack()
+
+input_text = tk.Text(root, height=5, width=50)
+input_text.pack()
+
+# Output Text Label and Text Area
+output_text_label = tk.Label(root, text="Translated Text:")
+output_text_label.pack()
+
+output_text = tk.Text(root, height=5, width=50)
+output_text.pack()
+
+root.mainloop()
