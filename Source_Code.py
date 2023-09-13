@@ -1,12 +1,34 @@
 import tkinter as tk
-from playsound import playsound as PS
-import speech_recognition as s_r
-from googletrans import Translator as Trans
-from gtts import gTTS as googleTranslatorService
 import os
-import pygame
+# import pygame
 
-user_directory = f'C:\\Users\\vignesh_viswaa\\PycharmProjects\\speechToSpeech'
+try:
+    import playsound
+except ImportError:
+    os.system("pip install playsound")
+
+try:
+    import speech_recognition as s_r
+except ImportError:
+    os.system("pip install SpeechRecognition")
+
+try:
+    from googletrans import Translator as Trans
+except ImportError:
+    os.system("pip install googletrans==4.0.0-rc1")
+
+try:
+    from gtts import gTTS as googleTranslatorService
+except ImportError:
+    os.system("pip install gTTS")
+
+try:
+    import pygame
+except ImportError:
+    os.system("pip install pygame")
+# Rest of your code remains the same
+
+
 
 
 lang_set = ['afrikaans', 'af', 'albanian', 'sq',
@@ -102,12 +124,9 @@ def translate_and_speak():
     output_text.insert(tk.END, translated_text)
 
     # Save the translated text to an audio file
-    audio_path = os.path.join(user_directory, "captured_voice.mp3")
-    sound_path = os.path.join(user_directory, 'first.mp3')
+    sound_path="first.mp3"
     speak = googleTranslatorService(text=translated_text, lang=destination_language, slow=False)
 
-    speak.save(audio_path)
-    os.remove(audio_path)  # Remove the temporary audio file
 
     sound = googleTranslatorService(translated_text, lang=destination_language)
     sound.save(sound_path)
